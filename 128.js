@@ -1,10 +1,11 @@
 // game state
 const size = 3;
+let score = 0;
 const gameState = Array(size)
   .fill()
   .map((row) => Array(size).fill(0));
 
-// combine all in a certain direction
+// combine all possible tiles in a certain direction
 function combine(direction) {
   let change = false;
   const { x: xDirection, y: yDirection } = findDirection(direction);
@@ -23,6 +24,7 @@ function combine(direction) {
           : null;
         if (current === previous) {
           gameState[previousPos.x][previousPos.y] = 2 * current;
+          score += 2 * current;
           gameState[x][y] = 0;
           previousPos = null;
           change = true;
@@ -47,6 +49,7 @@ function combine(direction) {
           : null;
         if (current === previous) {
           gameState[previousPos.x][previousPos.y] = 2 * current;
+          score += 2 * current;
           gameState[x][y] = 0;
           previousPos = null;
           change = true;
@@ -207,7 +210,7 @@ function withinBoundary(x, y) {
   return x >= 0 && x < size && y >= 0 && y < size;
 }
 
-function showMatrix() {
+function currentMatrix() {
   for (let x = 0; x < size; x++) {
     for (let y = 0; y < size; y++) {
       document.getElementById(x + "," + y).innerHTML = gameState[x][y];
@@ -219,7 +222,7 @@ function start() {
   listen();
   addRandomTile();
   addRandomTile();
-  showMatrix();
+  currentMatrix();
 }
 
 function listen() {
@@ -239,7 +242,8 @@ function listen() {
       combine(pressedKeyDirection);
       move(pressedKeyDirection);
       addRandomTile();
-      showMatrix();
+      currentMatrix();
+      // check if game is over
     }
   });
 }
