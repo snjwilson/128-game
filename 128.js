@@ -1,10 +1,11 @@
 // game state
-const size = 3;
-let score = 0;
+const size = 4;
+let score;
+const previousHighScore = localStorage.getItem("highScore");
+let highScore = previousHighScore ? previousHighScore : 0;
 let gameOver = false;
-const gameState = Array(size)
-  .fill()
-  .map((row) => Array(size).fill(""));
+let gameWon = false;
+let gameState;
 
 // combine all possible tiles in a certain direction
 function combine(direction) {
@@ -37,7 +38,7 @@ function combine(direction) {
 
     // if there is a change display the new score
     if (change) {
-      document.getElementById("score").innerHTML = score;
+      setNewScore();
     }
     return change;
   } else {
@@ -67,7 +68,7 @@ function combine(direction) {
 
     // if there is a change display the new score
     if (change) {
-      document.getElementById("score").innerHTML = score;
+      setNewScore();
     }
     // return if there is any change or not
     return change;
@@ -114,7 +115,8 @@ function move(direction) {
       // iterate over all rows
       for (let x = 0; x < size; x++) {
         // iterate over each element in row
-        for (let y = 0; y < size; y++) {
+
+        for (let y = size - 1; y >= 0; y--) {
           const current = gameState[x][y];
           if (!current) continue;
           const next = findFarthestEmpty(x, y, direction);
@@ -130,7 +132,7 @@ function move(direction) {
       // iterate over all row
       for (let x = 0; x < size; x++) {
         // iterate over each element in row
-        for (let y = size - 1; y >= 0; y--) {
+        for (let y = 0; y < size; y++) {
           const current = gameState[x][y];
           if (!current) continue;
           const next = findFarthestEmpty(x, y, direction);
@@ -146,20 +148,20 @@ function move(direction) {
   return movementFunctions[direction]();
 }
 
-//
+// add tile at random empty position
 function addRandomTile() {
   let notFound = true;
   let flattenedGameState = gameState.flat();
-  let x;
-  let y;
-  while (notFound) {
-    const random = getRandomInt(9);
-    if (!flattenedGameState[random]) {
-      x = parseInt(random / size);
-      y = random % size;
-      notFound = false;
+  const emptyIndexes = [];
+  flattenedGameState.map((val, index) => {
+    if (val === "") {
+      emptyIndexes.push(index);
     }
-  }
+  });
+  const emptyIndex = getRandomInt(emptyIndexes.length);
+  const x = parseInt(emptyIndexes[emptyIndex] / size);
+  const y = emptyIndexes[emptyIndex] % size;
+  console.log(x, y);
   gameState[x][y] = 2;
 }
 
@@ -224,6 +226,19 @@ function withinBoundary(x, y) {
 }
 
 /**
+ * Set the new score
+ */
+function setNewScore() {
+  document.getElementById("score").innerHTML = score;
+  if (score > highScore) {
+    highScore = score;
+    if (highScore > previousHighScore)
+      localStorage.setItem("highScore", highScore);
+    document.getElementById("high-score").innerHTML = score;
+  }
+}
+
+/**
  * Check if there are any empty cells
  */
 function emptyCells() {
@@ -270,7 +285,7 @@ function isGameOver() {
   // if no empty cells and no possible combination of cells
   const status = !emptyCells() && !possibleCombination();
   if (status) {
-    removeListener();
+    document.getElementById("game-over").innerHTML = "GAME OVER";
   }
 }
 
@@ -278,9 +293,14 @@ function isGameOver() {
  * Display the current state of the matrix
  */
 function currentMatrix() {
+  let wonGame = false;
   for (let x = 0; x < size; x++) {
     for (let y = 0; y < size; y++) {
       document.getElementById(x + "," + y).innerHTML = gameState[x][y];
+      if (gameState[x][y] === 128) {
+        gameWon = true;
+        document.getElementById("game-won").innerHTML = "GAME WON";
+      }
     }
   }
 }
@@ -290,7 +310,7 @@ function currentMatrix() {
  */
 function addListener() {
   console.log("added event listener");
-  document.addEventListener("keydown", (e) => {
+  document.body.addEventListener("keydown", (e) => {
     const direction = {
       arrowup: "up",
       arrowdown: "down",
@@ -303,17 +323,16 @@ function addListener() {
     };
     const pressedKeyDirection = direction[e.key.toLowerCase()];
     // if correct key pressed and game is not over
-    if (pressedKeyDirection && !gameOver) {
+    if (pressedKeyDirection && !gameOver && !gameWon) {
       // combine tiles and move all tiles in the direction pressed
       combine(pressedKeyDirection);
       move(pressedKeyDirection);
       // only if there is an empty cell add a new random tile
       const emptyCellsPresent = emptyCells();
-      console.log(emptyCellsPresent);
       if (emptyCellsPresent) {
         addRandomTile();
       }
-      // show current matrix
+      // show current matrix and also check if game won
       currentMatrix();
       // check if game is over
       gameOver = isGameOver();
@@ -321,22 +340,47 @@ function addListener() {
   });
 }
 
-/**
- * Remove event listener
- */
-function removeListener() {
-  document.removeEventListener("keydown", () => {
-    console.log("Removed event listeners");
-  });
+function initState() {
+  // fetch previous high score
+  document.getElementById("high-score").innerHTML = localStorage.getItem(
+    "highScore"
+  )
+    ? localStorage.getItem("highScore")
+    : 0;
+  // fill array with empty cells
+  gameState = Array(size)
+    .fill()
+    .map((row) => Array(size).fill(""));
+  // reset game over and game won
+  gameOver = false;
+  gameWon = false;
+  document.getElementById("game-over").innerHTML = "";
+  document.getElementById("game-won").innerHTML = "";
+  // reset score
+  score = 0;
+  setNewScore();
 }
 
-function start() {
-  addListener();
+function start(reset = false) {
+  initState();
+  if (!reset) {
+    addListener();
+  }
   addRandomTile();
   addRandomTile();
   currentMatrix();
 }
 
+/**
+ * Restart game functionality
+ */
+document.getElementById("restart").addEventListener("click", () => {
+  start(true);
+});
+
+/**
+ * Start game after page loaded
+ */
 document.addEventListener("DOMContentLoaded", function () {
   console.log("dom content loaded");
   start();
