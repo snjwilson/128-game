@@ -1,4 +1,6 @@
-// game state
+/**
+ * Game state
+ */
 const size = 4;
 let score;
 const previousHighScore = localStorage.getItem("highScore");
@@ -7,7 +9,9 @@ let gameOver = false;
 let gameWon = false;
 let gameState;
 
-// combine all possible tiles in a certain direction
+/**
+ * Combine all possible tiles in a certain direction
+ */
 function combine(direction) {
   let change = false;
   const { x: xDirection, y: yDirection } = findDirection(direction);
@@ -75,7 +79,9 @@ function combine(direction) {
   }
 }
 
-// move all tiles in a certain direction
+/**
+ * Move all tiles in a certain direction
+ */
 function move(direction) {
   let change = false;
   const movementFunctions = {
@@ -115,7 +121,6 @@ function move(direction) {
       // iterate over all rows
       for (let x = 0; x < size; x++) {
         // iterate over each element in row
-
         for (let y = size - 1; y >= 0; y--) {
           const current = gameState[x][y];
           if (!current) continue;
@@ -148,7 +153,9 @@ function move(direction) {
   return movementFunctions[direction]();
 }
 
-// add tile at random empty position
+/**
+ * Add tile at random empty position
+ */
 function addRandomTile() {
   let notFound = true;
   let flattenedGameState = gameState.flat();
@@ -161,15 +168,20 @@ function addRandomTile() {
   const emptyIndex = getRandomInt(emptyIndexes.length);
   const x = parseInt(emptyIndexes[emptyIndex] / size);
   const y = emptyIndexes[emptyIndex] % size;
-  console.log(x, y);
-  gameState[x][y] = 2;
+  // fill random position with 2 or 4
+  gameState[x][y] = 2 * getRandomInt(2) + 2;
 }
 
+/**
+ * Get random integer from 0(inclusive) up to max(exclusive)
+ */
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-// find farthest empty from current posititon in a direction
+/**
+ * Find farthest empty cell from current posititon in a direction
+ */
 function findFarthestEmpty(x, y, direction) {
   let nextPos = nextPosition(x, y, direction);
   let farthest = false;
@@ -184,7 +196,9 @@ function findFarthestEmpty(x, y, direction) {
   return farthest;
 }
 
-// find next position in a certain direction
+/**
+ * Find next cell position in a certain direction
+ */
 function nextPosition(x, y, direction) {
   const { x: deltaX, y: deltaY } = findDirection(direction);
   return {
@@ -285,7 +299,7 @@ function isGameOver() {
   // if no empty cells and no possible combination of cells
   const status = !emptyCells() && !possibleCombination();
   if (status) {
-    document.getElementById("game-over").innerHTML = "GAME OVER";
+    document.getElementById("game-over").innerHTML = "Game Over!!";
   }
 }
 
@@ -299,7 +313,8 @@ function currentMatrix() {
       document.getElementById(x + "," + y).innerHTML = gameState[x][y];
       if (gameState[x][y] === 128) {
         gameWon = true;
-        document.getElementById("game-won").innerHTML = "GAME WON";
+        document.getElementById("game-won").innerHTML =
+          "Congratulations!! You Won!!";
       }
     }
   }
@@ -340,6 +355,9 @@ function addListener() {
   });
 }
 
+/**
+ * Initialize/reset game with starting values
+ */
 function initState() {
   // fetch previous high score
   document.getElementById("high-score").innerHTML = localStorage.getItem(
@@ -361,6 +379,9 @@ function initState() {
   setNewScore();
 }
 
+/**
+ * Start a new game
+ */
 function start(reset = false) {
   initState();
   if (!reset) {
