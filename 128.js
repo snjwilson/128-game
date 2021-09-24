@@ -34,6 +34,11 @@ function combine(direction) {
         }
       }
     }
+
+    // if there is a change display the new score
+    if (change) {
+      document.getElementById("score").innerHTML = score;
+    }
     return change;
   } else {
     // if y coordinate remains constant => up or down
